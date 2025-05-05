@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Steganography API Tester</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; }
+    h2 { margin-top: 30px; }
+    input, button { margin: 5px; }
+  </style>
+</head>
+<body>
+
+  <h1>Steganography API Tester</h1>
+
+  <h2>Signup</h2>
+  <input id="signup-username" placeholder="Username">
+  <input id="signup-password" type="password" placeholder="Password">
+  <button onclick="signup()">Signup</button>
+  <p id="signup-result"></p>
+
+  <h2>Login</h2>
+  <input id="login-username" placeholder="Username">
+  <input id="login-password" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+  <p id="login-result"></p>
+
+  <h2>Hide Text in Image</h2>
+  <input type="file" id="hide-text-img">
+  <input type="text" id="text-to-hide" placeholder="Text to hide">
+  <button onclick="hideText()">Hide Text</button>
+  <p id="hide-text-result"></p>
+
+  <h2>Extract Text from Image</h2>
+  <input type="file" id="extract-text-img">
+  <button onclick="extractText()">Extract Text</button>
+  <p id="extracted-text"></p>
+
+  <h2>Hide Image in Image</h2>
+  <input type="file" id="cover-img">
+  <input type="file" id="secret-img">
+  <button onclick="hideImage()">Hide Image</button>
+  <p id="hide-image-result"></p>
+
+  <h2>Extract Image from Stego</h2>
+  <input type="file" id="stego-img">
+  <button onclick="extractImage()">Extract Image</button>
+  <p id="extract-image-result"></p>
+
+  <h2>User Stats</h2>
+  <button onclick="getStats()">Get My Stats</button>
+  <pre id="stats-output"></pre>
+
+  <script>
+    let token = '';
+
+    async function signup() {
+      const form = new FormData();
+      form.append("username", document.getElementById("signup-username").value);
+      form.append("password", document.getElementById("signup-password").value);
+
+      const res = await fetch("/signup", { method: "POST", body: form });
+      const data = await res.json();
+      if (res.ok) {
+        token = data.token;
+        document.getElementById("signup-result").innerText = "Signup successful. Token stored.";
+      } else {
+        document.getElementById("signup-result").innerText = "Error: " + data.detail;
+      }
+    }
+
+    async function login() {
+      const form = new URLSearchParams();
+      form.append("username", document.getElementById("login-username").value);
+      form.append("password", document.getElementById("login-password").value);
+
+      const res = await fetch("/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: form.toString()
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        token = data.access_token;
+        document.getElementById("login-result").innerText = "Login successful. Token stored.";
+      } else {
+        document.getElementById("login-result").innerText = "Login failed: " + data.detail;
+      }
+    }
+
+    async function hideText() {
+      const form = new FormData();
+      const fileInput = document.getElementById("hide-text-img");
+      const text = document.getElementById("text-to-hide").value;
+
+      form.append("image", fileInput.files[0]);
+      form.append("text", text);
+
+      const res = await fetch("/hide-text", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token },
+        body: form
+      });
+
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        document.getElementById("hide-text-result").innerHTML = `<a href="${url}" download="stego.png">Download Stego Image</a>`;
+      } else {
+        document.getElementById("hide-text-result").innerText = "Failed to hide text.";
+      }
+    }
+
+    async function extractText() {
+      const form = new FormData();
+      const fileInput = document.getElementById("extract-text-img");
+      form.append("image", fileInput.files[0]);
+
+      const res = await fetch("/extract-text", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token },
+        body: form
+      });
+
+      const data = await res.json();
+      document.getElementById("extracted-text").innerText = data.extracted_text || "No text found.";
+    }
+
+    async function hideImage() {
+      const form = new FormData();
+      form.append("cover", document.getElementById("cover-img").files[0]);
+      form.append("secret", document.getElementById("secret-img").files[0]);
+
+      const res = await fetch("/hide-image", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token },
+        body: form
+      });
+
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        document.getElementById("hide-image-result").innerHTML = `<a href="${url}" download="stego.png">Download Stego Image</a>`;
+      } else {
+        document.getElementById("hide-image-result").innerText = "Failed to hide image.";
+      }
+    }
+
+    async function extractImage() {
+      const form = new FormData();
+      form.append("stego", document.getElementById("stego-img").files[0]);
+
+      const res = await fetch("/extract-image", {
+        method: "POST",
+        headers: { "Authorization": "Bearer " + token },
+        body: form
+      });
+
+      if (res.ok) {
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+        document.getElementById("extract-image-result").innerHTML = `<a href="${url}" download="extracted.png">Download Extracted Image</a>`;
+      } else {
+        document.getElementById("extract-image-result").innerText = "Failed to extract image.";
+      }
+    }
+
+    async function getStats() {
+      const res = await fetch("/user-stats", {
+        headers: { "Authorization": "Bearer " + token }
+      });
+
+      if (res.ok) {
+        const stats = await res.json();
+        document.getElementById("stats-output").innerText = JSON.stringify(stats, null, 2);
+      } else {
+        document.getElementById("stats-output").innerText = "Failed to fetch stats.";
+      }
+    }
+  </script>
+</body>
+</html>
