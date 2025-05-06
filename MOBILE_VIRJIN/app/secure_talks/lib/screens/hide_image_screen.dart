@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 
-class DashboardScreen extends StatelessWidget {
-  const DashboardScreen({super.key});
+class HideImageScreen extends StatelessWidget {
+  const HideImageScreen({super.key, required this.token});
+  final String token;
 
   @override
   Widget build(BuildContext context) {
     return const Center(
       child: Text(
-        'Welcome to the Dashboard!',
+        'Hide Image in Image Page',
         style: TextStyle(fontSize: 20),
       ),
     );

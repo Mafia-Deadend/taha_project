@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class ExtractImageScreen extends StatelessWidget {
-  const ExtractImageScreen({super.key});
+  const ExtractImageScreen({super.key, required this.token});
+  final String token;
 
   @override
   Widget build(BuildContext context) {

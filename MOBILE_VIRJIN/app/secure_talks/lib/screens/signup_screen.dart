@@ -33,18 +33,21 @@ class _SignupScreenState extends State<SignupScreen> {
 
     if (result['success']) {
       String username = emailController.text;
+      String token = result['data']['access_token'];
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => HomeScreen(
             username: username,
+            token: token, // ✅ pass the token here
             onLogout: () {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),
               );
             },
+            
           ),
         ),
       );

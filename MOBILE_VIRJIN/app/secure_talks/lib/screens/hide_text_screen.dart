@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 
 class HideTextScreen extends StatelessWidget {
-  const HideTextScreen({super.key});
+final String token;
+  const HideTextScreen({super.key, required this.token});
 
   @override
   Widget build(BuildContext context) {

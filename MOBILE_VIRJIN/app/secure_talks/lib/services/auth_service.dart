@@ -37,6 +37,7 @@ class AuthService {
         body: {
           'username': username,
           'password': password,
+         
         },
       );
 
@@ -47,6 +48,7 @@ class AuthService {
         return {
           'success': false,
           'message': error['detail'] ?? 'Signup failed',
+          
         };
       }
     } catch (e) {
