@@ -32,9 +32,21 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (result['success']) {
+      String username = emailController.text;
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (_) => HomeScreen(
+            username: username,
+            onLogout: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            },
+          ),
+        ),
       );
     } else {
       setState(() {
@@ -46,7 +58,7 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Login")),
+      appBar: AppBar(title: const Text("Log In")),
       body: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -67,7 +79,7 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: isLoading ? null : handleLogin,
               child: isLoading
                   ? const CircularProgressIndicator()
-                  : const Text("Login"),
+                  : const Text("Log In"),
             ),
             const SizedBox(height: 10),
             TextButton(

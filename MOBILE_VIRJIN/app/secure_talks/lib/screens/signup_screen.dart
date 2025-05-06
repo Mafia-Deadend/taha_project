@@ -32,9 +32,21 @@ class _SignupScreenState extends State<SignupScreen> {
     });
 
     if (result['success']) {
+      String username = emailController.text;
+
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const HomeScreen()),
+        MaterialPageRoute(
+          builder: (_) => HomeScreen(
+            username: username,
+            onLogout: () {
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+              );
+            },
+          ),
+        ),
       );
     } else {
       setState(() {

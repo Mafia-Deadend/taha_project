@@ -2,7 +2,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class AuthService {
-  static const String baseUrl = 'http://127.0.0.1:8000'; // Replace with your backend IP if needed
+  static const String baseUrl = 'https://automatic-doodle-rqpg69qrwp7hp9j9-8000.app.github.dev'; // Replace with your backend IP if needed
 
   static Future<Map<String, dynamic>> login(String username, String password) async {
     try {
