@@ -23,7 +23,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> fetchStats() async {
-    final url = Uri.parse("https://automatic-doodle-rqpg69qrwp7hp9j9-8000.app.github.dev/userstats"); // Update to your backend URL
+    final url = Uri.parse("https://automatic-doodle-rqpg69qrwp7hp9j9-8000.app.github.dev/userstats");
     final response = await http.get(
       url,
       headers: {
@@ -44,39 +44,68 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Widget buildStatCard(String label, int value) {
-    return Card(
-      child: ListTile(
-        leading: const Icon(Icons.check_circle_outline),
-        title: Text(label),
-        trailing: Text(value.toString()),
+  Widget buildStatCard(String label, int value, IconData icon, Color color) {
+    return Container(
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(color: Colors.black12, blurRadius: 6, offset: Offset(0, 4)),
+        ],
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 40, color: color),
+          const SizedBox(height: 12),
+          Text(label, style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+          const SizedBox(height: 8),
+          Text(value.toString(), style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: color)),
+        ],
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
-    if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    if (error.isNotEmpty) {
-      return Center(child: Text(error));
-    }
-
     return Scaffold(
-      appBar: AppBar(title: const Text('Dashboard')),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: ListView(
-          children: [
-            buildStatCard("Hide Text", stats['hide_text'] ?? 0),
-            buildStatCard("Extract Text", stats['extract_text'] ?? 0),
-            buildStatCard("Hide Image", stats['hide_image'] ?? 0),
-            buildStatCard("Extract Image", stats['extract_image'] ?? 0),
-          ],
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: () {
+              // Handle logout logic here
+              Navigator.pop(context); // Close drawer
+            },
+          ),
+        ],
+        title: const Text('📊 Dashboard'),
+        centerTitle: true,
+        backgroundColor: Colors.deepPurple,
       ),
+      body: isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : error.isNotEmpty
+              ? Center(child: Text(error))
+              : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: GridView.count(
+                    crossAxisCount: 2,
+                    crossAxisSpacing: 16,
+                    mainAxisSpacing: 16,
+                    children: [
+                      buildStatCard("Hide Text", stats['hide_text'] ?? 0, Icons.visibility_off, Colors.teal),
+                      buildStatCard("Extract Text", stats['extract_text'] ?? 0, Icons.visibility, Colors.orange),
+                      buildStatCard("Hide Image", stats['hide_image'] ?? 0, Icons.image_not_supported, Colors.blue),
+                      buildStatCard("Extract Image", stats['extract_image'] ?? 0, Icons.image, Colors.pink),
+                    ],
+                  ),
+                ),
     );
   }
 }
