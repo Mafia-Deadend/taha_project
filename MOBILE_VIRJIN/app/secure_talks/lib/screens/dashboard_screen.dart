@@ -1,6 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import '../globals.dart'; // Import the globals file
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import 'home_screen.dart';
+import 'login_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   final String token;
@@ -23,7 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> fetchStats() async {
-    final url = Uri.parse("https://automatic-doodle-rqpg69qrwp7hp9j9-8000.app.github.dev/userstats");
+    final url = Uri.parse("https://automatic-doodle-rqpg69qrwp7hp9j9-8000.app.github.dev/user-stats");
     final response = await http.get(
       url,
       headers: {
@@ -73,17 +78,26 @@ class _DashboardScreenState extends State<DashboardScreen> {
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.pop(context),
+          onPressed: () {
+            final userProvider = Provider.of<UserProvider>(context, listen: false);
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => HomeScreen(
+                  username: userProvider.username,
+                  token: userProvider.token,
+                  onLogout: () {
+                    userProvider.clearUser();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const LoginScreen()),
+                    );
+                  },
+                ),
+              ),
+            );
+          },
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              // Handle logout logic here
-              Navigator.pop(context); // Close drawer
-            },
-          ),
-        ],
         title: const Text('📊 Dashboard'),
         centerTitle: true,
         backgroundColor: Colors.deepPurple,

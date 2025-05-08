@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'signup_screen.dart';
 import 'home_screen.dart';
 import 'package:secure_talks/services/auth_service.dart';
+import '../globals.dart'; // Import the globals file
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -32,16 +35,20 @@ class _LoginScreenState extends State<LoginScreen> {
     });
 
     if (result['success']) {
-      String username = emailController.text;
-      String token = result['data']['access_token'];
+      final userProvider = Provider.of<UserProvider>(context, listen: false);
+      userProvider.setUser(
+        emailController.text, // Save username
+        result['data']['access_token'], // Save token
+      );
 
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
           builder: (_) => HomeScreen(
-            username: username,
-            token: token, // ✅ pass the token here
+            username: userProvider.username,
+            token: userProvider.token,
             onLogout: () {
+              userProvider.clearUser();
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (_) => const LoginScreen()),

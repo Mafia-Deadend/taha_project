@@ -1,8 +1,18 @@
 import 'package:flutter/material.dart';
 import 'screens/splash_screen.dart';
+import 'screens/login_screen.dart';
+import 'screens/dashboard_screen.dart';
+import 'screens/home_screen.dart';
+import 'package:provider/provider.dart';
+import 'providers/user_provider.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => UserProvider(),
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -17,7 +27,12 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.indigo,
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      initialRoute: '/login',
+      routes: {
+         // Replace with your actual home screen widget
+        '/login': (context) => const LoginScreen(),
+        '/dashboard': (context) => const DashboardScreen(token: ''), // Pass token dynamically
+      },
     );
   }
 }
