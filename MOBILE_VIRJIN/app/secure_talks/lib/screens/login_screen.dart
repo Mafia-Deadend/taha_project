@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'signup_screen.dart';
 import 'home_screen.dart';
 import 'package:secure_talks/services/auth_service.dart';
-import '../globals.dart'; // Import the globals file
+// Import the globals file
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-import '../globals.dart'; // Import the globals file
+// Import the globals file
 import 'package:provider/provider.dart';
 import '../providers/user_provider.dart';
 import 'home_screen.dart';

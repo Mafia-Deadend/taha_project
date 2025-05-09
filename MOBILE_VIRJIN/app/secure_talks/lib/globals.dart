@@ -1,4 +1,4 @@
-library globals;
+library;
 
 String globalUsername = '';
 String globalToken = '';
