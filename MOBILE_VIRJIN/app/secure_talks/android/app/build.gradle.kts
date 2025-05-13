@@ -9,7 +9,7 @@ android {
     ndkVersion = "27.0.12077973"
     namespace = "com.example.secure_talks"
     compileSdk = flutter.compileSdkVersion
-    ndkVersion = flutter.ndkVersion
+    
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11

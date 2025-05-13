@@ -27,11 +27,12 @@ class _SplashScreenState extends State<SplashScreen> {
       backgroundColor: Colors.indigo,
       body: Center(
         child: Text(
-          "Stego App",
+          "Secure Talks",
           style: TextStyle(
             fontSize: 32,
-            color: Colors.white,
+            color: Color.fromARGB(255, 0, 132, 255),
             fontWeight: FontWeight.bold,
+            fontFamily: 'times new roman',
           ),
         ),
       ),

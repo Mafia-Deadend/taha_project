@@ -4,6 +4,10 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart'; // For MediaType
+import 'package:permission_handler/permission_handler.dart'; // For permission handling
+import 'package:path_provider/path_provider.dart'; // For storing files locally
+ // For sharing files
+import 'package:secure_talks/globals.dart';
 
 // --- Configuration ---
 // IMPORTANT: Replace with your actual API base URL
@@ -11,7 +15,6 @@ import 'package:http_parser/http_parser.dart'; // For MediaType
 // - Android Emulator: 'http://10.0.2.2:8000'
 // - iOS Simulator: 'http://localhost:8000' or 'http://127.0.0.1:8000'
 // If running on a physical device, use your computer's network IP.
-const String API_BASE_URL = 'https://automatic-doodle-rqpg69qrwp7hp9j9-8000.app.github.dev'; // Example for Android Emulator
 
 class HideTextScreen extends StatefulWidget {
   final String token;
@@ -30,10 +33,20 @@ class _HideTextScreenState extends State<HideTextScreen> {
   String? _errorMessage;
   String? _successMessage;
 
+  // Permission Request
+  Future<void> requestStoragePermission() async {
+    final status = await Permission.storage.request();
+    if (!status.isGranted) {
+      setState(() {
+        _errorMessage = "Storage permission is required to save the image.";
+      });
+    }
+  }
+
+  // Pick cover image from gallery
   Future<void> _pickCoverImage() async {
     try {
-      final XFile? pickedFile =
-          await _picker.pickImage(source: ImageSource.gallery);
+      final XFile? pickedFile = await _picker.pickImage(source: ImageSource.gallery);
       if (pickedFile != null) {
         setState(() {
           _coverImageFile = pickedFile;
@@ -49,6 +62,7 @@ class _HideTextScreenState extends State<HideTextScreen> {
     }
   }
 
+  // Hide text in the image using the backend API
   Future<void> _hideTextInImage() async {
     if (_coverImageFile == null) {
       setState(() {
@@ -117,6 +131,38 @@ class _HideTextScreenState extends State<HideTextScreen> {
         _isLoading = false;
       });
     }
+  }
+
+  // Save image to gallery or share
+  Future<void> saveImageToGallery(Uint8List imageBytes) async {
+    await requestStoragePermission();  // Request permission first
+
+    if (_errorMessage != null) return;
+
+    final directory = await getExternalStorageDirectory();
+    final path = '${directory!.path}/stego_${DateTime.now().millisecondsSinceEpoch}.png';
+
+    final file = File(path);
+    await file.writeAsBytes(imageBytes);
+
+    print('Image saved to: $path');
+    setState(() {
+      _successMessage = 'Image saved to gallery!';
+    });
+  }
+
+  // Share image
+  Future<void> shareImage(Uint8List imageBytes) async {
+    await requestStoragePermission();  // Request permission first
+
+    if (_errorMessage != null) return;
+
+    final tempDir = await getTemporaryDirectory();
+    final file = File('${tempDir.path}/stego_image.png');
+    await file.writeAsBytes(imageBytes);
+
+    // Use share_plus to share the image
+    
   }
 
   @override
@@ -198,7 +244,7 @@ class _HideTextScreenState extends State<HideTextScreen> {
                   textAlign: TextAlign.center,
                 ),
               ),
-            
+
             // --- Success Message ---
             if (_successMessage != null)
               Padding(
@@ -231,17 +277,28 @@ class _HideTextScreenState extends State<HideTextScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              TextButton.icon( // Example: Add a way to "save" or "share"
-                icon: const Icon(Icons.info_outline),
-                label: const Text("Note: Image is displayed. For saving, implement platform-specific file saving."),
-                onPressed: () {
-                  // Implement saving logic here if desired using path_provider and file operations
-                  // Or use share_plus to share the image bytes
-                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Save/Share functionality not yet implemented in this example.")),
-                  );
-                },
-              )
+              Row(
+                children: [
+                  TextButton.icon(
+                    icon: const Icon(Icons.save_alt),
+                    label: const Text("Save Image"),
+                    onPressed: () {
+                      if (_stegoImageBytes != null) {
+                        saveImageToGallery(_stegoImageBytes!);
+                      }
+                    },
+                  ),
+                  TextButton.icon(
+                    icon: const Icon(Icons.share),
+                    label: const Text("Share Image"),
+                    onPressed: () {
+                      if (_stegoImageBytes != null) {
+                        shareImage(_stegoImageBytes!);
+                      }
+                    },
+                  ),
+                ],
+              ),
             ],
           ],
         ),

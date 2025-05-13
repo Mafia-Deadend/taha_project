@@ -1,13 +1,14 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:secure_talks/globals.dart';
 
 class AuthService {
-  static const String baseUrl = 'https://automatic-doodle-rqpg69qrwp7hp9j9-8000.app.github.dev'; // Replace with your backend IP if needed
+   // Replace with your backend IP if needed
 
   static Future<Map<String, dynamic>> login(String username, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/token'),
+        Uri.parse('$API_BASE_URL/token'),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {
           'username': username,
@@ -32,7 +33,7 @@ class AuthService {
   static Future<Map<String, dynamic>> signup(String username, String password) async {
     try {
       final response = await http.post(
-        Uri.parse('$baseUrl/signup'),
+        Uri.parse('$API_BASE_URL/signup'),
         headers: {'Content-Type': 'application/x-www-form-urlencoded'},
         body: {
           'username': username,

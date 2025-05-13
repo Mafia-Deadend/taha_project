@@ -1,3 +1,5 @@
+import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'login_screen.dart';
 import 'dashboard_screen.dart';
@@ -17,7 +19,7 @@ class HomeScreen extends StatelessWidget {
     required this.token,
     required this.onLogout,
   });
-
+  
   void _navigateTo(BuildContext context, Widget page) {
     Navigator.pop(context); // Close drawer
     Navigator.push(
@@ -30,48 +32,62 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Welcome, $username'),
+        title: Text('Welcome, $username',style: const TextStyle(fontSize: 20,fontFamily: 'times new roman')),
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
             DrawerHeader(
-              decoration: const BoxDecoration(color: Colors.blue),
+              decoration: const BoxDecoration(color: Color.fromARGB(255, 150, 2, 196)),
               child: Text(
                 'Hello, $username!',
-                style: const TextStyle(color: Colors.white, fontSize: 24),
+                style: const TextStyle(color: Colors.white, fontSize: 24,fontFamily: 'times new roman',
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             ListTile(
               leading: const Icon(Icons.dashboard),
-              title: const Text('Dashboard'),
+              title: const Text('Dashboard',style: const TextStyle(color: Color.fromARGB(255, 135, 3, 135), fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                )),
               onTap: () => _navigateTo(context, DashboardScreen(token: token)),
             ),
             ListTile(
               leading: const Icon(Icons.text_fields),
-              title: const Text('Hide Text in Image'),
+              title: const Text('Hide Text in Image',style: const TextStyle(color: Color.fromARGB(255, 135, 3, 135), fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,fontFeatures: [FontFeature.enable('smcp')], // Small caps
+                )),
               onTap: () => _navigateTo(context, HideTextScreen(token: token)),
             ),
             ListTile(
               leading: const Icon(Icons.search),
-              title: const Text('Extract Text from Image'),
+              title: const Text('Extract Text from Image',style: const TextStyle(color: Color.fromARGB(255, 135, 3, 135), fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                )),
               onTap: () => _navigateTo(context, ExtractTextScreen(token: token)),
             ),
             ListTile(
               leading: const Icon(Icons.image),
-              title: const Text('Hide Image in Image'),
+              title: const Text('Hide Image in Image',style: const TextStyle(color: Color.fromARGB(255, 135, 3, 135), fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                )),
               onTap: () => _navigateTo(context, HideImageScreen(token: token)),
             ),
             ListTile(
               leading: const Icon(Icons.visibility),
-              title: const Text('Extract Image from Image'),
+              title: const Text('Extract Image from Image',style: const TextStyle(color: Color.fromARGB(255, 135, 3, 135), fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                )),
               onTap: () => _navigateTo(context, ExtractImageScreen(token: token)),
             ),
             const Divider(),
             ListTile(
               leading: const Icon(Icons.logout),
-              title: const Text('Logout'),
+              title: const Text('Logout',style: const TextStyle(color: Color.fromARGB(255, 135, 3, 135), fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                )),
               onTap: () {
                 onLogout(); // clean up token/session
                 Navigator.pushReplacement(
@@ -98,35 +114,60 @@ class HomeScreen extends StatelessWidget {
               icon: const Icon(Icons.dashboard),
               label: const Text("Dashboard"),
               onPressed: () =>
-                  _navigateTo(context, DashboardScreen(token: token)),
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => DashboardScreen(token: token),
+                ),
+                ),
             ),
             const SizedBox(height: 10),
             ElevatedButton.icon(
               icon: const Icon(Icons.text_fields),
               label: const Text("Hide Text in Image"),
-              onPressed: () =>
-                  _navigateTo(context, HideTextScreen(token: token)),
+             onPressed: () =>
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => HideTextScreen(token: token),
+                ),
+                ),
             ),
             const SizedBox(height: 10),
             ElevatedButton.icon(
               icon: const Icon(Icons.search),
               label: const Text("Extract Text from Image"),
               onPressed: () =>
-                  _navigateTo(context, ExtractTextScreen(token: token)),
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ExtractTextScreen(token: token),
+                ),
+                ),
             ),
             const SizedBox(height: 10),
             ElevatedButton.icon(
               icon: const Icon(Icons.image),
               label: const Text("Hide Image in Image"),
               onPressed: () =>
-                  _navigateTo(context, HideImageScreen(token: token)),
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => HideImageScreen(token: token),
+                ),
+                ),
             ),
             const SizedBox(height: 10),
             ElevatedButton.icon(
               icon: const Icon(Icons.visibility),
               label: const Text("Extract Image from Image"),
               onPressed: () =>
-                  _navigateTo(context, ExtractImageScreen(token: token)),
+                Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => ExtractImageScreen(token: token),
+                ),
+                ),
             ),
           ],
         ),

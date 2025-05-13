@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
-// Import the globals file
 import 'package:provider/provider.dart';
+import 'package:secure_talks/globals.dart';
 import '../providers/user_provider.dart';
 import 'home_screen.dart';
 import 'login_screen.dart';
@@ -18,8 +18,10 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, int> stats = {};
+  String username = '';
   bool isLoading = true;
   String error = '';
+  String usernamed = '';
 
   @override
   void initState() {
@@ -28,7 +30,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> fetchStats() async {
-    final url = Uri.parse("https://automatic-doodle-rqpg69qrwp7hp9j9-8000.app.github.dev/user-stats");
+    final url = Uri.parse("$API_BASE_URL/user-stats");
+    
     final response = await http.get(
       url,
       headers: {
@@ -37,13 +40,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
 
     if (response.statusCode == 200) {
-      setState(() {
-        stats = Map<String, int>.from(json.decode(response.body));
-        isLoading = false;
-      });
+      try {
+        final data = json.decode(response.body);
+
+        Map<String, int> parsedStats = {};
+        data.forEach((key, value) {
+          if (value is int) {
+            parsedStats[key] = value;
+          }
+        });
+
+        setState(() {
+          usernamed = data['username'] ?? 'User';
+         
+          stats = parsedStats;
+          isLoading = false;
+        });
+
+      } catch (e) {
+        setState(() {
+          error = "Error parsing response: $e";
+          isLoading = false;
+        });
+      }
     } else {
       setState(() {
-        error = "Failed to fetch stats";
+        error = "Failed to fetch stats. Status: ${response.statusCode}";
         isLoading = false;
       });
     }
@@ -108,15 +130,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ? Center(child: Text(error))
               : Padding(
                   padding: const EdgeInsets.all(16.0),
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      buildStatCard("Hide Text", stats['hide_text'] ?? 0, Icons.visibility_off, Colors.teal),
-                      buildStatCard("Extract Text", stats['extract_text'] ?? 0, Icons.visibility, Colors.orange),
-                      buildStatCard("Hide Image", stats['hide_image'] ?? 0, Icons.image_not_supported, Colors.blue),
-                      buildStatCard("Extract Image", stats['extract_image'] ?? 0, Icons.image, Colors.pink),
+                      Text(
+                        'Dashboard for User :  $usernamed',
+                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 16),
+                      Expanded(
+                        child: GridView.count(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          children: [
+                            buildStatCard("Hide Text", stats['hide_text'] ?? 0, Icons.visibility_off, Colors.teal),
+                            buildStatCard("Extract Text", stats['extract_text'] ?? 0, Icons.visibility, Colors.orange),
+                            buildStatCard("Hide Image", stats['hide_image'] ?? 0, Icons.image_not_supported, Colors.blue),
+                            buildStatCard("Extract Image", stats['extract_image'] ?? 0, Icons.image, Colors.pink),
+                          ],
+                        ),
+                      ),
                     ],
                   ),
                 ),
