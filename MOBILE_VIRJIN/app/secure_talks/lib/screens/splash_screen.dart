@@ -13,7 +13,7 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    Timer(const Duration(seconds: 3), () {
+    Timer(const Duration(seconds: 2), () {
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (context) => const LoginScreen()),
@@ -24,13 +24,13 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return const Scaffold(
-      backgroundColor: Colors.indigo,
+      backgroundColor: Color.fromARGB(167, 7, 9, 9),
       body: Center(
         child: Text(
           "Secure Talks",
           style: TextStyle(
             fontSize: 32,
-            color: Color.fromARGB(255, 0, 132, 255),
+            color: Color.fromARGB(255, 106, 255, 0),
             fontWeight: FontWeight.bold,
             fontFamily: 'times new roman',
           ),

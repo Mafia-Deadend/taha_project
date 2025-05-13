@@ -4,6 +4,7 @@ import 'screens/dashboard_screen.dart';
 import 'package:provider/provider.dart';
 import 'providers/user_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'screens/splash_screen.dart';
 
 void main() {
   runApp(
@@ -26,7 +27,7 @@ class MyApp extends StatelessWidget {
         primarySwatch: Colors.indigo,
         useMaterial3: true,
       ),
-      initialRoute: '/login',
+      home: SplashScreen(),
       routes: {
          // Replace with your actual home screen widget
         '/login': (context) => const LoginScreen(),
