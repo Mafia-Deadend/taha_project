@@ -6,15 +6,13 @@ import 'package:http/http.dart' as http;
 import 'package:http_parser/http_parser.dart'; // For MediaType
 import 'package:permission_handler/permission_handler.dart'; // For permission handling
 import 'package:path_provider/path_provider.dart'; // For storing files locally
- // For sharing files
 import 'package:secure_talks/globals.dart';
-
-// --- Configuration ---
-// IMPORTANT: Replace with your actual API base URL
-// If running FastAPI locally and Flutter emulator on same machine:
-// - Android Emulator: 'http://10.0.2.2:8000'
-// - iOS Simulator: 'http://localhost:8000' or 'http://127.0.0.1:8000'
-// If running on a physical device, use your computer's network IP.
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import 'home_screen.dart';
+import 'login_screen.dart';
+import 'dart:convert'; // For jsonDecode
+import 'package:url_launcher/url_launcher.dart';
 
 class HideTextScreen extends StatefulWidget {
   final String token;
@@ -29,7 +27,10 @@ class _HideTextScreenState extends State<HideTextScreen> {
   XFile? _coverImageFile;
   Uint8List? _stegoImageBytes;
   final TextEditingController _textController = TextEditingController();
+  final TextEditingController _recipientController = TextEditingController();
+  List<String> _userSuggestions = [];
   bool _isLoading = false;
+  bool _isFetchingUsers = false;
   String? _errorMessage;
   String? _successMessage;
 
@@ -165,6 +166,137 @@ class _HideTextScreenState extends State<HideTextScreen> {
     
   }
 
+  // Save image to gallery
+  Future<void> _saveToGallery() async {
+    if (_stegoImageBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No stego image to save')),
+      );
+      return;
+    }
+
+    await requestStoragePermission(); // Request permission first
+
+    if (_errorMessage != null) return;
+
+    final directory = await getExternalStorageDirectory();
+    final path = '${directory!.path}/stego_${DateTime.now().millisecondsSinceEpoch}.png';
+
+    final file = File(path);
+    await file.writeAsBytes(_stegoImageBytes!);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Image saved to gallery: $path')),
+    );
+  }
+
+  // Fetch user suggestions
+  Future<void> _fetchUserSuggestions(String query) async {
+    if (query.isEmpty) {
+      setState(() {
+        _userSuggestions = [];
+      });
+      return;
+    }
+
+    setState(() {
+      _isFetchingUsers = true;
+    });
+
+    try {
+      final response = await http.get(
+        Uri.parse('$API_BASE_URL/available-users'),
+        headers: {'Authorization': 'Bearer ${widget.token}'},
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> users = jsonDecode(response.body)['available_users'];
+        setState(() {
+          _userSuggestions = users
+              .map((user) => user['username'] as String)
+              .where((username) => username.toLowerCase().startsWith(query.toLowerCase()))
+              .toList();
+        });
+      } else {
+        throw Exception('Failed to fetch user suggestions');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error fetching users: $e')),
+      );
+    } finally {
+      setState(() {
+        _isFetchingUsers = false;
+      });
+    }
+  }
+
+  // Send image to user
+  Future<void> _sendToUser() async {
+    if (_stegoImageBytes == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No stego image to send')),
+      );
+      return;
+    }
+
+    final recipient = _recipientController.text.trim();
+    if (recipient.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please enter a recipient username')),
+      );
+      return;
+    }
+
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final file = File('${tempDir.path}/stego_image.png');
+      await file.writeAsBytes(_stegoImageBytes!);
+
+      final request = http.MultipartRequest('POST', Uri.parse('$API_BASE_URL/send-image'))
+        ..headers['Authorization'] = 'Bearer ${widget.token}'
+        ..fields['recipient_username'] = recipient
+        ..fields['message_type'] = 'stego_image'
+        ..files.add(await http.MultipartFile.fromPath('image', file.path));
+
+      final response = await request.send();
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Image sent to $recipient')),
+        );
+      } else {
+        throw Exception('Failed to send image. Status code: ${response.statusCode}');
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error sending image: $e')),
+      );
+    }
+  }
+
+  Future<void> _sendViaGmail(Uint8List imageBytes) async {
+    final tempDir = await getTemporaryDirectory();
+    final file = File('${tempDir.path}/stego_image.png');
+    await file.writeAsBytes(imageBytes);
+
+    final emailUri = Uri(
+      scheme: 'mailto',
+      path: '', // Add recipient email here if needed
+      query: Uri.encodeFull(
+        'subject=Stego Image&body=Please find the attached stego image.&attachment=${file.path}',
+      ),
+    );
+
+    if (await canLaunchUrl(emailUri)) {
+      await launchUrl(emailUri);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open Gmail')),
+      );
+    }
+  }
+
   @override
   void dispose() {
     _textController.dispose();
@@ -173,9 +305,78 @@ class _HideTextScreenState extends State<HideTextScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hide Text in Image'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Color.fromARGB(255, 150, 2, 196)),
+              child: Text(
+                'Hello, ${userProvider.username}!',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontFamily: 'times new roman',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text(
+                'Home',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 135, 3, 135),
+                  fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(
+                      username: userProvider.username,
+                      token: userProvider.token,
+                      onLogout: () {
+                        userProvider.clearUser();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 135, 3, 135),
+                  fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                userProvider.clearUser();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
@@ -277,7 +478,10 @@ class _HideTextScreenState extends State<HideTextScreen> {
                 ),
               ),
               const SizedBox(height: 10),
-              Row(
+              Wrap(
+                spacing: 8.0,
+                runSpacing: 8.0,
+                alignment: WrapAlignment.center,
                 children: [
                   TextButton.icon(
                     icon: const Icon(Icons.save_alt),
@@ -297,7 +501,30 @@ class _HideTextScreenState extends State<HideTextScreen> {
                       }
                     },
                   ),
+                  TextButton.icon(
+                    icon: const Icon(Icons.email),
+                    label: const Text("Send via Gmail"),
+                    onPressed: () {
+                      if (_stegoImageBytes != null) {
+                        _sendViaGmail(_stegoImageBytes!);
+                      }
+                    },
+                  ),
                 ],
+              ),
+              const SizedBox(height: 16),
+              TextField(
+                controller: _recipientController,
+                onChanged: _fetchUserSuggestions,
+                decoration: const InputDecoration(
+                  labelText: 'Recipient Username',
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              ElevatedButton(
+                onPressed: _sendToUser,
+                child: const Text('Send to User'),
               ),
             ],
           ],

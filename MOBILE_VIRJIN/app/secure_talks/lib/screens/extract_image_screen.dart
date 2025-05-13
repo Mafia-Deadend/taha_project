@@ -4,6 +4,10 @@ import 'package:image_picker/image_picker.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:secure_talks/globals.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import 'home_screen.dart';
+import 'login_screen.dart';
 
 class ExtractImageScreen extends StatefulWidget {
   const ExtractImageScreen({super.key, required this.token});
@@ -72,7 +76,7 @@ class _ExtractImageScreenState extends State<ExtractImageScreen> {
   }
 
   Future<File> extractImageFromStego(File stegoImage, String token) async {
-    final String apiUrl = '$API_BASE_URL/extract-image'; // Replace <your-api-url> with your actual API URL
+    final String apiUrl = '$API_BASE_URL/extract-image';
 
     try {
       final request = http.MultipartRequest('POST', Uri.parse(apiUrl))
@@ -97,9 +101,78 @@ class _ExtractImageScreenState extends State<ExtractImageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Extract Image from Stego Image'),
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Color.fromARGB(255, 150, 2, 196)),
+              child: Text(
+                'Hello, ${userProvider.username}!',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontFamily: 'times new roman',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text(
+                'Home',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 135, 3, 135),
+                  fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(
+                      username: userProvider.username,
+                      token: userProvider.token,
+                      onLogout: () {
+                        userProvider.clearUser();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 135, 3, 135),
+                  fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                userProvider.clearUser();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),

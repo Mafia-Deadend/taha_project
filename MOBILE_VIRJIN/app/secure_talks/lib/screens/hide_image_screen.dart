@@ -5,6 +5,10 @@ import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:secure_talks/globals.dart';
+import 'package:provider/provider.dart';
+import '../providers/user_provider.dart';
+import 'home_screen.dart';
+import 'login_screen.dart';
 import 'dart:convert';
 
 class HideImageScreen extends StatefulWidget {
@@ -18,11 +22,11 @@ class HideImageScreen extends StatefulWidget {
 class _HideImageScreenState extends State<HideImageScreen> {
   File? _coverImage;
   File? _secretImage;
-  File? _stegoImage; // To store the output stego image
+  File? _stegoImage;
   bool _isLoading = false;
   final TextEditingController _recipientController = TextEditingController();
-  List<String> _userSuggestions = []; // List to store user suggestions
-  bool _isFetchingUsers = false; // To show a loading indicator while fetching users
+  List<String> _userSuggestions = [];
+  bool _isFetchingUsers = false;
 
   Future<void> _pickImage(bool isCoverImage) async {
     try {
@@ -222,11 +226,80 @@ class _HideImageScreenState extends State<HideImageScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Hide Image in Image'),
       ),
-      body: SingleChildScrollView( // Added to make the content scrollable
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Color.fromARGB(255, 150, 2, 196)),
+              child: Text(
+                'Hello, ${userProvider.username}!',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontFamily: 'times new roman',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text(
+                'Home',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 135, 3, 135),
+                  fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(
+                      username: userProvider.username,
+                      token: userProvider.token,
+                      onLogout: () {
+                        userProvider.clearUser();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 135, 3, 135),
+                  fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                userProvider.clearUser();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+      body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(16.0),
           child: Column(

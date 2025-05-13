@@ -53,6 +53,13 @@ c.execute('''CREATE TABLE IF NOT EXISTS actions (
     action_type TEXT,
     timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
 )''')
+c.execute('''CREATE TABLE IF NOT EXISTS messages (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    sender_id TEXT,
+    recipient_id TEXT,
+    message_type TEXT,
+    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+)''')
 conn.commit()
 
 # --- Utility Functions ---
@@ -66,8 +73,20 @@ def get_user_by_token(token: str):
         raise HTTPException(status_code=401, detail="Invalid token")
     return user[0]
 
+def get_user_by_username(username: str) -> str:
+    c.execute("SELECT id FROM users WHERE username = ?", (username,))
+    user = c.fetchone()
+    if not user:
+        raise HTTPException(status_code=404, detail="Recipient username not found")
+    return user[0]
+
 def log_action(user_id: str, action_type: str):
     c.execute("INSERT INTO actions (user_id, action_type) VALUES (?, ?)", (user_id, action_type))
+    conn.commit()
+
+def log_message(sender_id: str, recipient_id: str, message_type: str):
+    c.execute("INSERT INTO messages (sender_id, recipient_id, message_type) VALUES (?, ?, ?)",
+              (sender_id, recipient_id, message_type))
     conn.commit()
 
 # --- Text Encoding/Decoding ---
@@ -149,6 +168,10 @@ def hide_image_in_image(cover_stream: io.BytesIO, secret_stream: io.BytesIO, see
     cover_w, cover_h = cover_img.size
     secret_w, secret_h = secret_img.size
 
+    # Check if the cover image is large enough to hide the secret image
+    if cover_w * cover_h < secret_w * secret_h:
+        raise ValueError("Cover image is too small to hide the secret image.")
+
     cover_pixels[0, 0] = (secret_w // 256, secret_w % 256, cover_pixels[0, 0][2])
     cover_pixels[0, 1] = (secret_h // 256, secret_h % 256, cover_pixels[0, 1][2])
 
@@ -209,7 +232,7 @@ async def signup(username: str = Form(...), password: str = Form(...)):
                   (user_id, username, hash_password(password)))
         conn.commit()
     except sqlite3.IntegrityError:
-        raise HTTPException(status_code=400, detail="Username already exists")
+        raise HTTPException(sxtatus_code=400, detail="Username already exists")
     return {"token": user_id}
 
 @app.post("/token")
@@ -224,10 +247,23 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
 @app.get("/user-stats")
 async def get_stats(token: str = Depends(oauth2_scheme)):
     user_id = get_user_by_token(token)
-    stats = {}
-    for action in ["hide_text", "extract_text", "hide_image", "extract_image"]:
-        c.execute("SELECT COUNT(*) FROM actions WHERE user_id = ? AND action_type = ?", (user_id, action))
+    
+    # Get username
+    c.execute("SELECT username FROM users WHERE id = ?", (user_id,))
+    result = c.fetchone()
+    username = result[0] if result else "Unknown User"
+
+    # Count each action type
+    action_types = ["hide_text", "extract_text", "hide_image", "extract_image"]
+    stats = {"username": username}
+    
+    for action in action_types:
+        c.execute(
+            "SELECT COUNT(*) FROM actions WHERE user_id = ? AND action_type = ?",
+            (user_id, action)
+        )
         stats[action] = c.fetchone()[0]
+
     return stats
 
 # --- API Endpoints ---
@@ -263,3 +299,36 @@ async def extract_image_api(stego: UploadFile = File(...), token: str = Depends(
     output = extract_image_from_image(io.BytesIO(stego_bytes))
     log_action(user_id, "extract_image")
     return StreamingResponse(output, media_type="image/png", headers={"Content-Disposition": "attachment; filename=extracted.png"})
+
+@app.post("/send-image")
+async def send_image(recipient_username: str = Form(...), message_type: str = Form(...), token: str = Depends(oauth2_scheme)):
+    user_id = get_user_by_token(token)
+    recipient_id = get_user_by_username(recipient_username)
+    
+    # Log the message
+    log_message(user_id, recipient_id, message_type)
+    
+    return {"detail": f"Image successfully sent to {recipient_username}"}
+
+@app.get("/messages")
+async def get_messages(token: str = Depends(oauth2_scheme)):
+    user_id = get_user_by_token(token)
+    
+    # Fetch sent messages
+    c.execute("SELECT recipient_id, message_type, timestamp FROM messages WHERE sender_id = ?", (user_id,))
+    sent_messages = [{"recipient_id": row[0], "message_type": row[1], "timestamp": row[2]} for row in c.fetchall()]
+    
+    # Fetch received messages
+    c.execute("SELECT sender_id, message_type, timestamp FROM messages WHERE recipient_id = ?", (user_id,))
+    received_messages = [{"sender_id": row[0], "message_type": row[1], "timestamp": row[2]} for row in c.fetchall()]
+    
+    return {"sent_messages": sent_messages, "received_messages": received_messages}
+
+@app.get("/available-users")
+async def available_users(prefix: str = ""):
+    # Fetch all users and filter by prefix
+    query = "SELECT username FROM users WHERE username LIKE ?"
+    c.execute(query, (f"{prefix}%",))
+    users = [{"username": row[0]} for row in c.fetchall()]
+    
+    return {"available_users": users}

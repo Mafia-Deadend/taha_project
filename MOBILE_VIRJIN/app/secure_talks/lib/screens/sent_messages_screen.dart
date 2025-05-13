@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
+import 'package:secure_talks/screens/recipient_messages_screen.dart';
 
 import 'package:secure_talks/globals.dart';
 
@@ -40,18 +41,18 @@ class _SentMessagesScreenState extends State<SentMessagesScreen> {
         final data = jsonDecode(response.body);
         final List<dynamic> messages = data['sent_messages'];
 
-        // Group messages by recipient
+        // Group messages by recipient username
         final Map<String, List<Map<String, String>>> groupedMessages = {};
         for (var message in messages) {
-          final recipientId = message['recipient_id'];
+          final recipientUsername = message['recipient_username']; // Use recipient_username
           final messageType = message['message_type'];
           final timestamp = message['timestamp'];
 
-          if (!groupedMessages.containsKey(recipientId)) {
-            groupedMessages[recipientId] = [];
+          if (!groupedMessages.containsKey(recipientUsername)) {
+            groupedMessages[recipientUsername] = [];
           }
 
-          groupedMessages[recipientId]!.add({
+          groupedMessages[recipientUsername]!.add({
             'message_type': messageType,
             'timestamp': timestamp,
           });
@@ -96,7 +97,7 @@ class _SentMessagesScreenState extends State<SentMessagesScreen> {
                 )
               : ListView(
                   padding: const EdgeInsets.all(16),
-                  children: sentMessages.keys.map((recipientId) {
+                  children: sentMessages.keys.map((recipientUsername) {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
@@ -106,50 +107,20 @@ class _SentMessagesScreenState extends State<SentMessagesScreen> {
                             foregroundColor: Colors.black,
                           ),
                           onPressed: () {
-                            showDialog(
-                              context: context,
-                              builder: (_) => AlertDialog(
-                                backgroundColor: Colors.black,
-                                title: Text(
-                                  'Messages to $recipientId',
-                                  style: const TextStyle(color: Colors.amber),
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => RecipientMessagesScreen(
+                                  recipientUsername: recipientUsername,
+                                  messages: sentMessages[recipientUsername]!,
                                 ),
-                                content: SizedBox(
-                                  height: 300,
-                                  child: ListView.builder(
-                                    itemCount: sentMessages[recipientId]!.length,
-                                    itemBuilder: (context, index) {
-                                      final message =
-                                          sentMessages[recipientId]![index];
-                                      return ListTile(
-                                        title: Text(
-                                          'Type: ${message['message_type']}',
-                                          style: const TextStyle(
-                                              color: Colors.white),
-                                        ),
-                                        subtitle: Text(
-                                          'Date: ${message['timestamp']}',
-                                          style: const TextStyle(
-                                              color: Colors.grey),
-                                        ),
-                                      );
-                                    },
-                                  ),
-                                ),
-                                actions: [
-                                  TextButton(
-                                    onPressed: () =>
-                                        Navigator.of(context).pop(),
-                                    child: const Text(
-                                      'Close',
-                                      style: TextStyle(color: Colors.amber),
-                                    ),
-                                  ),
-                                ],
                               ),
                             );
                           },
-                          child: Text('Messages to $recipientId'),
+                          child: Text(
+                            'Messages to $recipientUsername',
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                         const SizedBox(height: 10),
                       ],

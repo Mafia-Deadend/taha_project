@@ -21,14 +21,14 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Stego App',
+      title: 'Secure Talks',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark, // Set the overall theme to dark
         primaryColor: Colors.amber, // Primary color for the app
-        scaffoldBackgroundColor: Colors.black, // Background color for all screens
+        scaffoldBackgroundColor: const Color.fromARGB(255, 47, 47, 47), // Background color for all screens
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.black, // AppBar background color
+          backgroundColor: const Color.fromARGB(255, 47, 47, 47), // AppBar background color
           foregroundColor: Colors.amber, // AppBar text/icon color
         ),
         textTheme: const TextTheme(
@@ -39,12 +39,12 @@ class MyApp extends StatelessWidget {
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.amber, // Button background color
-            foregroundColor: Colors.black, // Button text color
+            foregroundColor: const Color.fromARGB(255, 47, 47, 47), // Button text color
           ),
         ),
         inputDecorationTheme: const InputDecorationTheme(
           filled: true,
-          fillColor: Colors.black, // TextField background color
+          fillColor: const Color.fromARGB(255, 47, 47, 47), // TextField background color
           border: OutlineInputBorder(
             borderSide: BorderSide(color: Colors.amber), // Border color
           ),

@@ -31,7 +31,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> fetchStats() async {
     final url = Uri.parse("$API_BASE_URL/user-stats");
-    
+
     final response = await http.get(
       url,
       headers: {
@@ -52,11 +52,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
         setState(() {
           usernamed = data['username'] ?? 'User';
-         
           stats = parsedStats;
           isLoading = false;
         });
-
       } catch (e) {
         setState(() {
           error = "Error parsing response: $e";
@@ -96,33 +94,80 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final userProvider = Provider.of<UserProvider>(context, listen: false);
+
     return Scaffold(
       appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () {
-            final userProvider = Provider.of<UserProvider>(context, listen: false);
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => HomeScreen(
-                  username: userProvider.username,
-                  token: userProvider.token,
-                  onLogout: () {
-                    userProvider.clearUser();
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                    );
-                  },
-                ),
-              ),
-            );
-          },
-        ),
         title: const Text('📊 Dashboard'),
         centerTitle: true,
         backgroundColor: Colors.deepPurple,
+      ),
+      drawer: Drawer(
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            DrawerHeader(
+              decoration: const BoxDecoration(color: Color.fromARGB(255, 150, 2, 196)),
+              child: Text(
+                'Hello, ${userProvider.username}!',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontFamily: 'times new roman',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.home),
+              title: const Text(
+                'Home',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 135, 3, 135),
+                  fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => HomeScreen(
+                      username: userProvider.username,
+                      token: userProvider.token,
+                      onLogout: () {
+                        userProvider.clearUser();
+                        Navigator.pushReplacement(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        );
+                      },
+                    ),
+                  ),
+                );
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.logout),
+              title: const Text(
+                'Logout',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 135, 3, 135),
+                  fontFamily: 'poppins',
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              onTap: () {
+                userProvider.clearUser();
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                );
+              },
+            ),
+          ],
+        ),
       ),
       body: isLoading
           ? const Center(child: CircularProgressIndicator())
