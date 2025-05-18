@@ -10,6 +10,7 @@ A fully working **secure communication application** combining **FastAPI**, **SQ
 
 * 🔐 **Secure Messaging**: Send and receive messages hidden within images using steganography.
 * 🧑‍💻 **User Management**: User registration, login, and authentication.
+* 📲 **Message Logs**: Logs of sent and recieved messages along with user actions log.
 * 🧠 **FastAPI + SQLite**: Lightweight backend built on FastAPI, with local SQLite databases.
 * 📱 **Flutter Mobile Application**: Cross-platform frontend for accessing the backend functionality.
 * 🌍 **Hosted API Server**: Backend is deployed online, making it accessible to the mobile app.
