@@ -1,10 +1,6 @@
-Thank you for the clarification!
 
-You've **not used REST API** style (so we won't use that term), and you've **hosted the FastAPI backend online** for access by the mobile app. Here’s the **revised and accurate README.md**, incorporating all key points:
 
----
-
-# taha\_project
+# Secure_Talks🔐
 
 A fully working **secure communication application** combining **FastAPI**, **SQLite**, and **Steganography** with a **Flutter-based mobile frontend**. The system allows users to hide messages inside images (via steganography), manage user data securely, and access the service through a mobile application.
 
