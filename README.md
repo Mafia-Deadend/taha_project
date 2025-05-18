@@ -160,7 +160,7 @@ Pull requests and feature suggestions are welcome. Fork the repo, make changes, 
 
 ## 🪪 License
 
-This project is licensed under the **MIT License**.
+This project is licensed under  **TAHA_JALIL_Hammad**.
 
 ---
 
