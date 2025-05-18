@@ -32,10 +32,12 @@ taha_project/
 │
 ├── SecureTalk-Files/        # Supporting components/resources
 │
-├── MOBILE_VIRJIN/           # Flutter mobile app source
-│   ├── lib/
-│   ├── android/
-│   └── ...
+├── MOBILE_VIRJIN/
+│   └──app
+│     └──secure_talks           # Flutter mobile app source
+│      ├── lib/
+│      ├── android/
+│      └── ...
 │
 ├── requirements.txt         # Python backend dependencies
 └── README.md                # This file
