@@ -112,7 +112,7 @@ If you’re deploying on a VPS or cloud server, make sure to:
 1. Navigate to the Flutter project:
 
    ```bash
-   cd MOBILE_VIRJIN
+   cd MOBILE_VIRJIN/app/secure_talks
    ```
 
 2. Fetch dependencies:
